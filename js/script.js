@@ -135,92 +135,64 @@ window.addEventListener('DOMContentLoaded', function () {
 
     let form = document.querySelector(' .main-form'),
         inputForm = form.getElementsByTagName('input')[0],
+        input = document.getElementsByName('input'),
         statusMessage = document.createElement('div'),
-        inputFormEmail = document.getElementById('mail'),
-        inputFormNum = document.getElementById('phone'),
+        inputsPhone = document.querySelectorAll('input[name="phone"]'),
         formFooter = document.getElementById('form');
     statusMessage.classList.add('status');
 
+    console.log(inputsPhone);
+
     let ajaxRequest = (arg) => {
-        event.preventDefault();
-        arg.appendChild(statusMessage);
+        arg.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            arg.appendChild(statusMessage);
 
 
-        let request = new XMLHttpRequest();
-        request.open('POST', 'server.php');
-        // request.setRequestHeader('Content-type', ' application/x-www-form-urlencoded ');
-        request.setRequestHeader('Content-type', 'application/json; charset=utf-8 ');
+            let request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+            request.setRequestHeader('Content-type', ' application/x-www-form-urlencoded ');
 
-        let formData = new FormData(arg);
+            let formData = new FormData(arg);
 
-        let obj = {};
-        formData.forEach(function (value, key) {
-            obj[key] = value;
+            let obj = {};
+            formData.forEach(function (value, key) {
+                obj[key] = value;
+            });
+
+            let json = JSON.stringify(obj);
+
+            console.log(json);
+
+            request.send(json);
+
+            request.addEventListener('readystatechange', function () {
+                console.log('test');
+                if (request.readyState < 4) {
+                    statusMessage.textContent = message.loading;
+                } else if (request.readyState === 4 && request.status == 200) {
+                    statusMessage.textContent = message.success;
+                } else {
+                    statusMessage.textContent = message.failure;
+                }
+            });
+
+            inputForm.value = '';
         });
 
-        let json = JSON.stringify(obj);
+    };
 
-        request.send(json);
+    ajaxRequest(form);
+    ajaxRequest(formFooter);
 
-        request.addEventListener('readystatechange', function () {
-            if (request.readyState < 4) {
-                statusMessage.innerHTML = message.loading;
-            } else if (request.readyState === 4 && request.status == 200) {
-                statusMessage.innerHTML = message.success;
-            } else {
-                statusMessage.innerHTML = message.failure;
+    for (let i = 0; i < inputsPhone.length; i++) {
+        inputsPhone[i].addEventListener('input', (e) => {
+            if (/\D/.test(e.target.value)) {
+                e.target.value = '';
             }
         });
-
-        inputForm.value = '';
-
-
-    };
-
-
-    let ValidateForm = (input, wrapper) => {
-
-        let pattern = /[+0-9]/ig,
-            inputNumber = +input.value;
-        if (pattern.test(inputNumber) && input.value.length < 12) {
-            alert('все хорошо !');
-            input.value = '';
-
-
-        } else {
-            wrapper.appendChild(statusMessage);
-            statusMessage.textContent = ` Введите цифры , ограничение до 12 цифр! Вы ввели : ${input.value.length } цифр`;
-
-            let showError = () => {
-                statusMessage.textContent = '';
-                input.value = '';
-            };
-
-            setTimeout(showError, 3000);
-
-        }
-
-    };
-
-
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        ValidateForm(inputForm, form);
-
-        ajaxRequest(form);
-
-    });
-
-
-    formFooter.addEventListener('submit', function (event) {
-        event.preventDefault();
-        ValidateForm(inputFormNum, formFooter);
-        ajaxRequest(formFooter);
-
-
-    });
-
+    }
 
 
 });
